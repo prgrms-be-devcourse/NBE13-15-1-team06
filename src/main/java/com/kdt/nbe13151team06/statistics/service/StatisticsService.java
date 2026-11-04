@@ -196,16 +196,18 @@ public class StatisticsService {
         List<DeliveryBatchResponse> result = new ArrayList<>();
 
         // 고객 한 명 = 배송 묶음 한 개
+        // Entry = 맵에서 키와 밸류를 쌍이 아닌 하나씩 꺼내기 가능
         for (Map.Entry<String, List<Order>> entry : ordersByEmail.entrySet()) {
-            String email = entry.getKey();
-            List<Order> customerOrders = entry.getValue();
-            Order first = customerOrders.get(0);  // 주소/우편번호는 첫 주문 기준
+            String email = entry.getKey(); // -> map.entey<String> 꺼냄
+            List<Order> customerOrders = entry.getValue(); // List<Order>꺼냄
+            Order first = customerOrders.get(0); // 주소만
 
             List<Long> orderIds = new ArrayList<>();          // 묶음에 포함된 주문 번호들
             List<OrderItems> batchItems = new ArrayList<>();  // 묶음에 포함된 모든 상품
 
             for (Order order : customerOrders) {
                 orderIds.add(order.getId());
+                // getOrDefault 값이 없으면 정한 값 줌
                 batchItems.addAll(itemsByOrderId.getOrDefault(order.getId(), List.of()));
             }
             orderIds.sort(null);  // 주문 번호 오름차순 (null = 자연 정렬)
@@ -229,13 +231,13 @@ public class StatisticsService {
 
 
     // ============================================================
-    // 내부에서만 쓰는 공통 도우미 메서드
+    // 내부에서만 쓰는 공통 메서드
     // ============================================================
 
     /** 날짜 검사: 연도가 2000 ~ 2099 범위를 벗어나면 VALIDATION_ERROR 발생 */
     private void validateDate(LocalDate date) {
         int year = date.getYear();
-        if (year < 2000 || year > 2099) {
+        if (year <= 2000 || year >= 2099) {
             throw new VALIDATION_ERROR();
         }
     }
@@ -262,12 +264,13 @@ public class StatisticsService {
      * 주문 상품들을 "주문 ID -> 상품 목록"으로 묶는다.
      * 주문마다 쿼리를 날리지 않고 IN 쿼리 1번으로 가져온다 (N+1 문제 방지).
      */
+
     private Map<Long, List<OrderItems>> groupItemsByOrderId(List<Order> orders) {
         Map<Long, List<OrderItems>> map = new LinkedHashMap<>();
         if (orders.isEmpty()) {
             return map;
         }
-        // IN 절로 한 번에 조회 후, 주문 ID별로 분류
+        // IN 절로 한 번에 조회 후, 주문 ID별로 분류 -> n+1 방지
         for (OrderItems item : orderItemRepository.findByOrderIdIn(orders)) {
             map.computeIfAbsent(item.getOrderId().getId(), k -> new ArrayList<>()).add(item);
         }
