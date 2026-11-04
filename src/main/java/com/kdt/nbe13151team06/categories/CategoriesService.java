@@ -6,14 +6,12 @@ import com.kdt.nbe13151team06.categories.dto.CategoriesResponse;
 import com.kdt.nbe13151team06.error.CATEGORY_NAME_DUPLICATED;
 import com.kdt.nbe13151team06.error.CATEGORY_NOT_FOUND;
 import com.kdt.nbe13151team06.error.VALIDATION_ERROR;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Slf4j
 @Service
 public class CategoriesService {
 
@@ -90,12 +88,29 @@ public class CategoriesService {
         Categories category = getCategoryOrThrow(id);
 
         // menuRepository에서 category 사용중인지 확인
+        // menuRepository에 existsByCategoryId 추가
 //        if(menuRepository.existsByCategoryId(id){
 //            throw new CATEGORY_IN_USE("메뉴가 등록된 카테고리는 삭제할 수 없습니다.");
 //        }
 
         categoriesRepository.delete(category);
     }
+
+    // MenuRepository에 추가 -> List<Menus> findAllByCategoryIdOrderByIdAsc(Long id);
+    // -> jpa category 인식 안되면, categories로 통합하기
+    // A15 - 카테고리별 메뉴(GET) - /api/v1/categories/{categoriesId}/menus -> 200, Menu[]
+    /*
+    @Transactional(readOnly = true)
+    public List<MenuResponse> findMenusByCategory(Long id) {
+        validateId(id); // 카테고리 id 검증
+        getCategoryOrThrow(id); // 카테고리 존재 여부 검증
+
+        return this.menuRepository.findAllByCategoryIdOrderByIdAsc(id)
+                .stream()
+                .map(MenuResponse::from)
+                .toList();
+    }
+     */
 
     // 공통 조회 메서드
     // id가 없는 경우 -> CATEGORY_NOT_FOUND 커스텀 예외 던짐.

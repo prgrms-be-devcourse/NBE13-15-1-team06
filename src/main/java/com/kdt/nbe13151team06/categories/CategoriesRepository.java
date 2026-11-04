@@ -16,4 +16,5 @@ public interface CategoriesRepository extends JpaRepository<Categories, Long> {
     // 수정할 때, 자기 자신을 제외한 다른 행이 있는지 검사.
     boolean existsByNameAndIdNot(String name, Long id); // 카테고리가 같고, id가 다른 행이 있는지 확인(업데이트)
 
+    Categories findByName(String name);
 }
